@@ -17,23 +17,28 @@ repositories{
 
 ext{
     //the build number that this plugin is made for
-    mindustryVersion = 'v145'
+    mindustryVersion = 'v155'
     jabelVersion = "93fde537c7"
 }
 
 //java 8 backwards compatibility flag
 allprojects{
-    tasks.withType(JavaCompile){
-        options.compilerArgs.addAll(['--release', '8'])
+    tasks.withType(JavaCompile).tap {
+        configureEach {
+            options.compilerArgs.addAll(['--release', '8'])
+        }
     }
 }
 
 dependencies{
-    compileOnly "com.github.Anuken.Arc:arc-core:$mindustryVersion"
-    compileOnly "com.github.Anuken.Mindustry:core:$mindustryVersion"
-    annotationProcessor "com.github.Anuken:jabel:$jabelVersion"
-}
+    compileOnly "com.github.Anuken.Arc:arc-core:v155"
+    compileOnly "com.github.Anuken.Mindustry:core:v155"
+    compileOnly "com.github.Anuken.Mindustry:server:v149"
 
+    annotationProcessor "com.github.Anuken:jabel:$jabelVersion"
+
+    implementation 'org.java-websocket:Java-WebSocket:1.6.0'
+}
 jar{
     archiveFileName = "${project.archivesBaseName}.jar"
     from{
@@ -43,4 +48,25 @@ jar{
     from(rootDir){
         include "plugin.json"
     }
+}
+
+tasks.register('copyTo', Copy) {
+    from jar
+    into 'E:/project/MindustryModDevLib/MindustryServerBridgeService/config/mods'
+    rename { 'BridgeService.jar' }
+}
+
+tasks.register('run', JavaExec) {
+    dependsOn classes
+    dependsOn 'copyTo'
+
+    main = "-jar"
+    args = [
+            "E:/project/MindustryModDevLib/MindustryServerBridgeService/server.jar",
+    ]
+    standardInput = System.in
+}
+
+tasks.named('jar') {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
